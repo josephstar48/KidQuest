@@ -1,5 +1,5 @@
 const STORAGE_KEY = "kidquest.state.v2";
-const ADMIN_EMAILS = (window.KIDQUEST_ADMIN_EMAILS || ["josephstar48@hotmailcom"]).map((email) => email.toLowerCase());
+const ADMIN_EMAILS = (window.KIDQUEST_ADMIN_EMAILS || ["josephstar48@hotmail.com"]).map((email) => email.toLowerCase());
 const FIREBASE_SDK_VERSION = "10.12.5";
 const TODAY = new Date().toISOString().slice(0, 10);
 
