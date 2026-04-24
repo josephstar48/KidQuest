@@ -18,6 +18,7 @@ Adventure Quest Kids is a dependency-free PWA learning game for short parent-led
 - 3 to 5 challenge mission loop with math, reading, speed, logic, and fitness activities
 - Coins, XP, levels, streaks, badges, titles, unlocks, and reward screen
 - Parent dashboard for progress, profile management, assignments, and PWA status
+- Semi-AI generator for free template-powered question sets by grade, topic, skill, and count
 - Multiplayer competition toggle for sibling/friend sessions
 - Voice narration through the browser Speech Synthesis API
 - Offline play through `sw.js`
@@ -107,4 +108,4 @@ If sign-in or Firestore stops working after restriction, return to the key and a
 
 ## Future Backend Upgrade
 
-The current AI-style questions are generated offline in the browser. To use hosted AI-generated questions, add a server endpoint that calls your AI provider and keeps API keys off the client.
+The current Semi-AI questions are generated offline in the browser with templates and variation logic. To use hosted AI-generated questions later, add a server endpoint that calls your AI provider and keeps API keys off the client.

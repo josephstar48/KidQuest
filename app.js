@@ -57,6 +57,7 @@ const defaultState = {
   dashboardTab: "progress",
   narration: true,
   multiplayer: false,
+  generatedQuestions: [],
   authReady: false,
   authError: "",
   authMode: "signin",
@@ -150,6 +151,7 @@ function cloudPayload() {
     dashboardTab: state.dashboardTab,
     narration: state.narration,
     multiplayer: state.multiplayer,
+    generatedQuestions: state.generatedQuestions,
     updatedAt: firebaseApi?.serverTimestamp ? firebaseApi.serverTimestamp() : new Date().toISOString()
   };
 }
@@ -220,6 +222,7 @@ async function loadCloudState(user) {
     dashboardTab: data.dashboardTab || "progress",
     narration: data.narration !== false,
     multiplayer: Boolean(data.multiplayer),
+    generatedQuestions: data.generatedQuestions || [],
     view: (data.kids || []).length ? "home" : "dashboard"
   };
 }
@@ -770,7 +773,7 @@ function dashboardScreen() {
 }
 
 function dashboardTabs() {
-  const tabs = ["progress", "kids", "assign", "account"];
+  const tabs = ["progress", "kids", "assign", "generator", "account"];
   if (state.parent?.role === "Admin") tabs.push("admin");
   return tabs;
 }
@@ -778,6 +781,7 @@ function dashboardTabs() {
 function dashboardTab(kid) {
   if (state.dashboardTab === "kids") return kidsManager();
   if (state.dashboardTab === "assign") return assignmentPanel(kid);
+  if (state.dashboardTab === "generator") return generatorPanel(kid);
   if (state.dashboardTab === "account") return accountPanel();
   if (state.dashboardTab === "admin" && state.parent?.role === "Admin") return adminPanel();
   return progressPanel(kid);
@@ -898,6 +902,80 @@ function assignmentPanel(kid) {
         </div>
       </article>
     </section>
+  `;
+}
+
+function generatorPanel(kid) {
+  const grades = ["Kindergarten", "Grade 1", "Grade 2", "Grade 3", "Grade 4"];
+  const topics = ["Animals", "Space", "Sports", "Food", "Nature", "City", "Ocean", "Dinosaurs"];
+  const skills = ["Mixed", "Math Battle", "Reading Quest", "Logic Puzzle", "Speed Challenge"];
+  const selectedGrade = kid?.difficulty || "Grade 2";
+
+  return `
+    <section class="grid two">
+      <article class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Semi-AI Generator</h3>
+            <p>Free template-powered questions that feel fresh without paid AI calls.</p>
+          </div>
+        </div>
+        <form data-form="generator">
+          <div class="field">
+            <label for="generatorGrade">Grade</label>
+            <select id="generatorGrade" name="grade">
+              ${grades.map((grade) => `<option ${grade === selectedGrade ? "selected" : ""}>${grade}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label for="generatorTopic">Topic</label>
+            <select id="generatorTopic" name="topic">
+              ${topics.map((topic) => `<option>${topic}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label for="generatorSkill">Skill</label>
+            <select id="generatorSkill" name="skill">
+              ${skills.map((skill) => `<option>${skill}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label for="generatorCount">Questions</label>
+            <select id="generatorCount" name="count">
+              ${[3, 4, 5, 8, 10].map((count) => `<option>${count}</option>`).join("")}
+            </select>
+          </div>
+          <button class="btn primary" type="submit">Generate Questions</button>
+        </form>
+      </article>
+      <article class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Generated Set</h3>
+            <p>${state.generatedQuestions.length ? `${state.generatedQuestions.length} questions ready.` : "No generated questions yet."}</p>
+          </div>
+          ${state.generatedQuestions.length && kid ? `<button class="btn gold" data-action="start-generated-mission">Play Set</button>` : ""}
+        </div>
+        <div class="grid">
+          ${state.generatedQuestions.map((question, index) => generatedQuestionCard(question, index)).join("") || `<div class="empty">Choose a grade, topic, skill, and count to generate a free question set.</div>`}
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function generatedQuestionCard(question, index) {
+  return `
+    <article class="card mission-card">
+      <div class="challenge-type">${question.type}</div>
+      <strong>${index + 1}. ${escapeHtml(question.prompt)}</strong>
+      ${question.story ? `<p class="reading-text">${escapeHtml(question.story)}</p>` : ""}
+      <div class="pill-row">
+        <span class="pill">${escapeHtml(question.grade)}</span>
+        <span class="pill">${escapeHtml(question.topic)}</span>
+        <span class="pill">Answer: ${escapeHtml(String(question.answer))}</span>
+      </div>
+    </article>
   `;
 }
 
@@ -1061,6 +1139,20 @@ function bindScreenEvents() {
     setState({ kids, activeKidId: form.get("kidId") });
   });
 
+  document.querySelector("[data-form='generator']")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const generatedQuestions = generateQuestionSet({
+      grade: form.get("grade"),
+      topic: form.get("topic"),
+      skill: form.get("skill"),
+      count: Number(form.get("count"))
+    });
+    setState({ generatedQuestions });
+  });
+
+  document.querySelector("[data-action='start-generated-mission']")?.addEventListener("click", startGeneratedMission);
+
   document.querySelector("[name='kidId']")?.addEventListener("change", (event) => {
     setState({ activeKidId: event.target.value });
   });
@@ -1100,6 +1192,30 @@ function startMission(worldId) {
   setState({ activeWorldId: worldId, mission, view: "challenge" });
 }
 
+function startGeneratedMission() {
+  const kid = activeKid();
+  if (!kid || !state.generatedQuestions.length) return;
+  const challenges = state.generatedQuestions.map((question) => ({
+    ...question,
+    timer: question.timer || "3 min",
+    enemy: question.enemy || enemies[Math.floor(Math.random() * enemies.length)]
+  }));
+  const topic = challenges[0]?.topic || "Custom";
+  const mission = {
+    id: crypto.randomUUID(),
+    name: `${topic} Generator Mission`,
+    worldId: "forest",
+    challenges,
+    index: 0,
+    score: 0,
+    coins: 0,
+    xp: 0,
+    badge: `${topic} Thinker Badge`
+  };
+  speak(`${topic} generator mission started.`);
+  setState({ activeWorldId: "forest", mission, view: "challenge" });
+}
+
 function makeChallenge(world, kid, index) {
   const type = world.skills[index % world.skills.length];
   if (type === "Math Battle") return makeMath(kid);
@@ -1107,6 +1223,152 @@ function makeChallenge(world, kid, index) {
   if (type === "Speed Challenge") return makeSpeed(kid);
   if (type === "Logic Puzzle") return makeLogic();
   return makeFitness();
+}
+
+function generateQuestionSet({ grade, topic, skill, count }) {
+  const skills = skill === "Mixed"
+    ? ["Math Battle", "Reading Quest", "Logic Puzzle", "Speed Challenge"]
+    : [skill];
+
+  return Array.from({ length: count }, (_, index) => {
+    const type = skills[index % skills.length];
+    const base = makeGeneratedQuestion(type, grade, topic, index);
+    return {
+      ...base,
+      id: crypto.randomUUID(),
+      grade,
+      topic,
+      generated: true
+    };
+  });
+}
+
+function makeGeneratedQuestion(type, grade, topic, index) {
+  if (type === "Math Battle") return makeTopicMath(grade, topic, index);
+  if (type === "Reading Quest") return makeTopicReading(grade, topic, index);
+  if (type === "Logic Puzzle") return makeTopicLogic(topic, index);
+  return makeTopicSpeed(grade, topic, index);
+}
+
+function topicWords(topic) {
+  const words = {
+    Animals: ["foxes", "owls", "turtles", "rabbits", "bears", "frogs"],
+    Space: ["rockets", "planets", "stars", "moons", "comets", "rovers"],
+    Sports: ["balls", "goals", "teams", "medals", "races", "jerseys"],
+    Food: ["apples", "tacos", "carrots", "berries", "muffins", "sandwiches"],
+    Nature: ["leaves", "flowers", "seeds", "trees", "stones", "clouds"],
+    City: ["buses", "trains", "parks", "bridges", "shops", "lights"],
+    Ocean: ["shells", "fish", "waves", "crabs", "whales", "boats"],
+    Dinosaurs: ["eggs", "tracks", "bones", "nests", "claws", "tails"]
+  };
+  return words[topic] || words.Animals;
+}
+
+function topicCharacters(topic) {
+  const characters = {
+    Animals: ["Mila the ranger", "Ethan the explorer", "Nora the zookeeper"],
+    Space: ["Captain Luna", "Milo the astronaut", "Nova the rover driver"],
+    Sports: ["Coach Rio", "Megan the runner", "Ethan the goalie"],
+    Food: ["Chef Ana", "Baker Max", "Mila the gardener"],
+    Nature: ["Ranger Bea", "Ethan the hiker", "Megan the botanist"],
+    City: ["Officer Jay", "Mila the map reader", "Ethan the builder"],
+    Ocean: ["Captain Kai", "Megan the diver", "Ethan the sailor"],
+    Dinosaurs: ["Dr. Rex", "Mila the fossil hunter", "Ethan the tracker"]
+  };
+  return characters[topic] || characters.Animals;
+}
+
+function gradeRange(grade) {
+  const ranges = {
+    Kindergarten: [3, 8],
+    "Grade 1": [5, 12],
+    "Grade 2": [8, 25],
+    "Grade 3": [12, 50],
+    "Grade 4": [20, 100]
+  };
+  return ranges[grade] || ranges["Grade 2"];
+}
+
+function makeTopicMath(grade, topic, index) {
+  const [min, max] = gradeRange(grade);
+  const words = topicWords(topic);
+  const item = words[index % words.length];
+  const a = min + Math.floor(Math.random() * (max - min + 1));
+  const b = min + Math.floor(Math.random() * Math.max(3, Math.floor((max - min) / 2)));
+  const useSubtract = index % 3 === 1;
+  const answer = useSubtract ? a : a + b;
+  const prompt = useSubtract
+    ? `${a + b} ${item} were on the trail. ${b} went home. How many are left?`
+    : `${a} ${item} joined ${b} more ${item}. How many ${item} are there?`;
+  return {
+    type: "Math Battle",
+    prompt,
+    answer,
+    options: shuffle([answer, answer + 1, Math.max(0, answer - 2), answer + 3]),
+    enemy: enemies[index % enemies.length],
+    timer: "3 min"
+  };
+}
+
+function makeTopicSpeed(grade, topic, index) {
+  const [min, max] = gradeRange(grade);
+  const words = topicWords(topic);
+  const a = min + Math.floor(Math.random() * Math.max(4, Math.floor(max / 2)));
+  const b = 1 + Math.floor(Math.random() * Math.max(4, Math.floor(max / 3)));
+  const answer = a + b;
+  return {
+    type: "Speed Challenge",
+    prompt: `Quick ${topic} count: ${a} ${words[index % words.length]} + ${b}`,
+    answer,
+    options: shuffle([answer, answer + 2, Math.max(0, answer - 1), answer + 4]),
+    timer: "60 sec"
+  };
+}
+
+function makeTopicReading(grade, topic, index) {
+  const characters = topicCharacters(topic);
+  const words = topicWords(topic);
+  const character = characters[index % characters.length];
+  const item = words[(index + 1) % words.length];
+  const actions = ["found", "counted", "shared", "sorted", "carried", "protected"];
+  const action = actions[index % actions.length];
+  const story = `${character} ${action} three ${item} during the ${topic.toLowerCase()} quest. Then the team used the ${item} to solve a clue.`;
+  return {
+    type: "Reading Quest",
+    story,
+    prompt: `What did ${character.split(" ")[0]} ${action}?`,
+    answer: `Three ${item}`,
+    options: shuffle([`Three ${item}`, "A silver key", "A red backpack", "Two maps"]),
+    timer: grade === "Kindergarten" ? "4 min" : "3 min"
+  };
+}
+
+function makeTopicLogic(topic, index) {
+  const words = topicWords(topic);
+  const first = words[index % words.length];
+  const second = words[(index + 1) % words.length];
+  const patterns = [
+    {
+      prompt: `What comes next? ${first}, ${second}, ${first}, ${second}`,
+      answer: first,
+      options: shuffle([first, second, words[(index + 2) % words.length], words[(index + 3) % words.length]])
+    },
+    {
+      prompt: `Which one belongs with ${topic.toLowerCase()}?`,
+      answer: first,
+      options: shuffle([first, "pencil", "pillow", "clock"])
+    },
+    {
+      prompt: `Find the pattern: 2 ${first}, 4 ${first}, 6 ${first}`,
+      answer: `8 ${first}`,
+      options: shuffle([`8 ${first}`, `7 ${first}`, `10 ${first}`, `6 ${second}`])
+    }
+  ];
+  return {
+    type: "Logic Puzzle",
+    ...patterns[index % patterns.length],
+    timer: "3 min"
+  };
 }
 
 function gradeNumber(kid) {
