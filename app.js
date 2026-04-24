@@ -43,6 +43,7 @@ let installPrompt = null;
 let firebaseAuth = null;
 let firebaseDb = null;
 let firebaseApi = null;
+let firebaseAppCheck = null;
 let currentUserId = null;
 let cloudSaveTimer = null;
 
@@ -239,6 +240,16 @@ async function initFirebase() {
     const authModule = await import(`https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-auth.js`);
     const firestoreModule = await import(`https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-firestore.js`);
     const firebaseApp = appModule.initializeApp(window.KIDQUEST_FIREBASE_CONFIG);
+    const appCheckSiteKey = window.KIDQUEST_APP_CHECK_SITE_KEY;
+
+    if (appCheckSiteKey && !String(appCheckSiteKey).startsWith("REPLACE_")) {
+      const appCheckModule = await import(`https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-app-check.js`);
+      firebaseAppCheck = appCheckModule.initializeAppCheck(firebaseApp, {
+        provider: new appCheckModule.ReCaptchaV3Provider(appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true
+      });
+    }
+
     firebaseAuth = authModule.getAuth(firebaseApp);
     firebaseDb = firestoreModule.getFirestore(firebaseApp);
     firebaseApi = { ...authModule, ...firestoreModule };
@@ -357,6 +368,7 @@ function render() {
     <div class="app">
       ${topbar(kid)}
       ${route()}
+      ${footerLinks()}
       ${installBanner()}
     </div>
   `;
@@ -387,6 +399,8 @@ function topbar(kid) {
 }
 
 function route() {
+  if (state.view === "privacy") return privacyScreen();
+  if (state.view === "terms") return termsScreen();
   if (!state.authReady) return loadingScreen();
   if (!state.parent) return authScreen();
   if (state.view === "dashboard") return dashboardScreen();
@@ -394,6 +408,17 @@ function route() {
   if (state.view === "challenge") return challengeScreen();
   if (state.view === "reward") return rewardScreen();
   return homeScreen();
+}
+
+function footerLinks() {
+  return `
+    <footer class="footer">
+      <span>KidQuest</span>
+      <button data-action="show-privacy">Privacy Policy</button>
+      <button data-action="show-terms">Terms</button>
+      <span>Parent-managed child profiles</span>
+    </footer>
+  `;
 }
 
 function loadingScreen() {
@@ -406,6 +431,76 @@ function loadingScreen() {
       <section class="panel auth-panel">
         <div class="section-title"><h2>Loading</h2></div>
         <div class="progress-track"><div class="progress-fill" style="--progress:65%"></div></div>
+      </section>
+    </main>
+  `;
+}
+
+function privacyScreen() {
+  return `
+    <main class="screen legal">
+      <button class="btn" data-action="go-home">${icon("back")} Back</button>
+      <section class="panel">
+        <div class="section-title">
+          <div>
+            <h1>Privacy Policy</h1>
+            <p>Effective April 24, 2026</p>
+          </div>
+        </div>
+        <p>KidQuest is a parent-managed educational adventure game for children. Children do not create separate accounts and do not need an email address or password. A parent or guardian creates the account, manages child profiles, and controls the learning experience.</p>
+        <h2>Information We Collect</h2>
+        <p>We collect the parent account email, parent display name, child profile names chosen by the parent, selected avatars, learning settings, rewards chosen by the parent or family, mission progress, coins, badges, streaks, and gameplay history needed to show progress.</p>
+        <h2>How We Use Information</h2>
+        <p>We use this information to sign parents in, save child profiles, sync progress across devices, show the parent dashboard, personalize missions, and keep the app working safely.</p>
+        <h2>Children's Privacy</h2>
+        <p>KidQuest is designed so parents manage the account. Children should use the app with parent permission and supervision. We do not ask children for email addresses, passwords, precise location, phone numbers, or direct contact information.</p>
+        <h2>Authentication And Storage</h2>
+        <p>Parent authentication is provided by Firebase Authentication. Child profiles and learning progress are stored in Firebase Cloud Firestore using security rules that limit access to the signed-in parent account and the creator admin account.</p>
+        <h2>Google Sign-In</h2>
+        <p>If a parent uses Google sign-in, Firebase may provide the parent's email address, display name, and profile identifier so KidQuest can create or access the parent account.</p>
+        <h2>Offline And Local Data</h2>
+        <p>KidQuest uses browser storage and service worker caching to support faster loading and offline play. A parent can clear local browser data through the browser settings.</p>
+        <h2>Sharing</h2>
+        <p>We do not sell child profile data. We use Firebase services to operate authentication, storage, security, and syncing. Data may be processed by Firebase/Google as the infrastructure provider.</p>
+        <h2>Parent Choices</h2>
+        <p>Parents can edit or remove child profiles in the Parent Dashboard. Parents can request account or progress deletion by contacting the app creator.</p>
+        <h2>Contact</h2>
+        <p>For privacy questions, account deletion, or child profile removal, contact Jose R. Estrella Sr. at josephstar48@hotmail.com.</p>
+        <p>This policy is a practical starter policy for the app and should be reviewed by a qualified professional before a broad public launch involving children.</p>
+      </section>
+    </main>
+  `;
+}
+
+function termsScreen() {
+  return `
+    <main class="screen legal">
+      <button class="btn" data-action="go-home">${icon("back")} Back</button>
+      <section class="panel">
+        <div class="section-title">
+          <div>
+            <h1>Terms Of Use</h1>
+            <p>Effective April 24, 2026</p>
+          </div>
+        </div>
+        <p>KidQuest is an educational game for families. By using KidQuest, you agree to these terms. If you are a child, you may use KidQuest only with permission from a parent or guardian.</p>
+        <h2>Parent Accounts</h2>
+        <p>Parents are responsible for creating and managing the account, adding child profiles, choosing rewards, setting difficulty, and supervising use of the app. Kids do not need separate logins.</p>
+        <h2>Educational Use</h2>
+        <p>KidQuest provides math, reading, logic, speed, and fitness activities for practice and encouragement. It is not a substitute for professional educational, medical, or fitness advice.</p>
+        <h2>Fitness Activities</h2>
+        <p>Fitness challenges should be done only when safe for the child. Parents should adjust or skip activities when needed and stop any activity that causes pain, dizziness, or discomfort.</p>
+        <h2>Accounts And Security</h2>
+        <p>You are responsible for keeping parent account credentials secure. Do not share your parent login with children or people who should not manage your family profiles.</p>
+        <h2>Acceptable Use</h2>
+        <p>Do not misuse KidQuest, attempt to bypass security controls, scrape data, interfere with the service, or use the app for unlawful or harmful purposes.</p>
+        <h2>Rewards</h2>
+        <p>Family rewards are chosen and fulfilled by parents or guardians. KidQuest tracks reward choices and progress but does not provide physical rewards.</p>
+        <h2>Availability</h2>
+        <p>KidQuest may change, pause, or stop features over time. Offline play may be limited to cached app features and previously available data.</p>
+        <h2>Contact</h2>
+        <p>For support, contact Jose R. Estrella Sr. at josephstar48@hotmail.com.</p>
+        <p>These terms are starter terms and should be reviewed by a qualified professional before a broad public launch involving children.</p>
       </section>
     </main>
   `;
@@ -861,6 +956,8 @@ function bindGlobalEvents() {
   document.querySelectorAll("[data-action='toggle-narration']").forEach((button) => button.addEventListener("click", () => setState({ narration: !state.narration })));
   document.querySelectorAll("[data-action='install']").forEach((button) => button.addEventListener("click", installApp));
   document.querySelectorAll("[data-action='sign-out']").forEach((button) => button.addEventListener("click", signOutParent));
+  document.querySelectorAll("[data-action='show-privacy']").forEach((button) => button.addEventListener("click", () => setState({ view: "privacy", mission: null })));
+  document.querySelectorAll("[data-action='show-terms']").forEach((button) => button.addEventListener("click", () => setState({ view: "terms", mission: null })));
   const banner = document.querySelector("#installBanner");
   if (banner && installPrompt) banner.classList.add("show");
 }

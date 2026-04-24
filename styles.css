@@ -582,6 +582,44 @@ button:disabled {
   display: grid;
 }
 
+.footer {
+  width: min(1160px, 100%);
+  margin: 0 auto;
+  padding: 12px clamp(14px, 3vw, 34px) 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+.footer button {
+  padding: 0;
+  background: transparent;
+  color: var(--blue-dark);
+  font-weight: 800;
+}
+
+.legal {
+  max-width: 920px;
+}
+
+.legal h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+}
+
+.legal h2 {
+  margin: 24px 0 8px;
+  font-size: 1.16rem;
+}
+
+.legal p {
+  color: #30495f;
+  line-height: 1.7;
+}
+
 .confetti {
   position: fixed;
   inset: 0;

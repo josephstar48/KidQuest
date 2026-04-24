@@ -11,7 +11,7 @@ service cloud.firestore {
     }
 
     function isCreatorAdmin() {
-      return signedIn() && request.auth.token.email == "josephstar48@hotmailcom";
+      return signedIn() && request.auth.token.email == "josephstar48@hotmail.com";
     }
 
     match /parents/{parentId} {
