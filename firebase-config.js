@@ -15,7 +15,7 @@ window.KIDQUEST_ADMIN_EMAILS = [
 // Optional but recommended before public launch:
 // Add your Firebase App Check reCAPTCHA v3 site key here after registering App Check
 // in Firebase Console. Keep this as an empty string for local setup until ready.
-window.KIDQUEST_APP_CHECK_SITE_KEY = "";
+window.KIDQUEST_APP_CHECK_SITE_KEY = "6LdUx8csAAAAABPr-fqp3Za3z090sMguSFtu95k8";
 
 // const firebaseConfig = {
 //   apiKey: "AIzaSyCB6LUeXfU6unbosHv2xJ-oyOioHLg-wek",
