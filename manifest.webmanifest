@@ -1,0 +1,20 @@
+{
+  "name": "KidQuest: Adventure Quest Kids",
+  "short_name": "KidQuest",
+  "description": "A playful learning and adventure PWA for math, reading, logic, and fitness.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7fbff",
+  "theme_color": "#0477d9",
+  "categories": ["education", "games", "kids"],
+  "icons": [
+    {
+      "src": "/assets/kidquest-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

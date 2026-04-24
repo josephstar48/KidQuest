@@ -1,0 +1,21 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(parentId) {
+      return signedIn() && request.auth.uid == parentId;
+    }
+
+    function isCreatorAdmin() {
+      return signedIn() && request.auth.token.email == "josephstar48@hotmailcom";
+    }
+
+    match /parents/{parentId} {
+      allow read, write: if isOwner(parentId) || isCreatorAdmin();
+    }
+  }
+}
