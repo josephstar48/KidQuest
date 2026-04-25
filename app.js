@@ -538,7 +538,7 @@ function authScreen() {
         <form data-form="auth">
           <div class="field" ${state.authMode === "signup" ? "" : "hidden"}>
             <label for="parentName">Parent name</label>
-            <input id="parentName" name="name" placeholder="Jose R. Estrella Sr." ${state.authMode === "signup" ? "required" : ""}>
+            <input id="parentName" name="name" placeholder="Joe Star" ${state.authMode === "signup" ? "required" : ""}>
           </div>
           <div class="field">
             <label for="parentEmail">Email</label>
