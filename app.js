@@ -331,7 +331,9 @@ function readableAuthError(error) {
   const messages = {
     "auth/email-already-in-use": "That email already has a KidQuest parent account. Sign in instead.",
     "auth/invalid-credential": "The email or password did not match an account.",
+    "auth/network-request-failed": "Firebase Auth could not be reached. Check your internet connection, Firebase authorized domains, API key restrictions, and App Check/reCAPTCHA allowed domains.",
     "auth/popup-closed-by-user": "Google sign-in was closed before it finished.",
+    "auth/unauthorized-domain": "This domain is not authorized in Firebase Authentication settings.",
     "auth/operation-not-allowed": "Enable this sign-in provider in Firebase Authentication.",
     "permission-denied": "Firestore denied access. Check your security rules."
   };
@@ -760,7 +762,7 @@ function dashboardScreen() {
       <div class="section-title">
         <div>
           <h2>Parent Dashboard</h2>
-          <p>${state.parent.name} · Parent account · Admin: Jose R. Estrella Sr.</p>
+          <p>${dashboardIdentityLabel()}</p>
         </div>
         <button class="btn" data-action="go-home">${icon("home")} Kid Mode</button>
       </div>
@@ -770,6 +772,11 @@ function dashboardScreen() {
       ${dashboardTab(selected)}
     </main>
   `;
+}
+
+function dashboardIdentityLabel() {
+  const base = `${state.parent.name} · ${state.parent.role} account`;
+  return state.parent.role === "Admin" ? `${base} · Creator: Jose R. Estrella Sr.` : base;
 }
 
 function dashboardTabs() {
@@ -991,10 +998,15 @@ function accountPanel() {
       </article>
       <article class="panel">
         <div class="section-title"><h3>PWA</h3></div>
-        <p>Offline play, home screen install, Firestore cloud sync, and Vercel deployment are active in this build.</p>
-        <p>Question generation is procedural and offline-ready now, with clean upgrade points for a hosted AI API later.</p>
+        <ul class="feature-list">
+          <li>Works offline so kids can play anywhere</li>
+          <li>Install on your phone or tablet, no app store needed</li>
+          <li>Progress is saved automatically and stays up to date</li>
+          <li>Engaging questions built to work without internet</li>
+          <li>Future updates will include even more personalized challenges</li>
+        </ul>
         <a class="btn primary" href="/assets/kidquest-icon.png" download="kidquest-pwa-icon.png">Download PWA Logo/Icon</a>
-        <button class="btn danger" data-action="clear-local-cache">Clear Local Cache</button>
+        <button class="btn danger" data-action="clear-local-cache">Clear Local App Cache</button>
       </article>
     </section>
   `;
@@ -1161,9 +1173,13 @@ function bindScreenEvents() {
     button.addEventListener("click", () => setState({ activeWorldId: button.dataset.world, view: "map" }));
   });
 
-  document.querySelector("[data-action='clear-local-cache']")?.addEventListener("click", () => {
+  document.querySelector("[data-action='clear-local-cache']")?.addEventListener("click", async () => {
     localStorage.removeItem(STORAGE_KEY);
-    state = { ...state, authError: "Local cache cleared. Cloud data remains saved." };
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((key) => key.startsWith("kidquest-cache")).map((key) => caches.delete(key)));
+    }
+    state = { ...state, authError: "Local app cache cleared. Cloud account data remains saved." };
     render();
   });
 }

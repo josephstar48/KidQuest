@@ -9,7 +9,7 @@ Adventure Quest Kids is a dependency-free PWA learning game for short parent-led
 - Google parent sign-in
 - Firestore database storage for parent accounts, child profiles, settings, and progress
 - Cross-device sync for signed-in parents
-- Creator/admin role detection for `josephstar48@hotmail.com`
+- Creator/admin role detection for `...`
 - Parent-facing Privacy Policy and Terms screens
 - Firebase App Check integration hook for reCAPTCHA v3
 - Parent account flow with real email/password and Google sign-in

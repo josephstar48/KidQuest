@@ -620,6 +620,13 @@ button:disabled {
   line-height: 1.7;
 }
 
+.feature-list {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  color: #30495f;
+  line-height: 1.7;
+}
+
 .confetti {
   position: fixed;
   inset: 0;
