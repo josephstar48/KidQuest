@@ -923,8 +923,7 @@ function generatorPanel(kid) {
       <article class="panel">
         <div class="section-title">
           <div>
-            <h3>Semi-AI Generator</h3>
-            <p>Free template-powered questions that feel fresh without paid AI calls.</p>
+            <h3>Questions Generator</h3>
           </div>
         </div>
         <form data-form="generator">
