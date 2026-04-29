@@ -470,7 +470,7 @@ function privacyScreen() {
         <h2>Parent Choices</h2>
         <p>Parents can edit or remove child profiles in the Parent Dashboard. Parents can request account or progress deletion by contacting the app creator.</p>
         <h2>Contact</h2>
-        <p>For privacy questions, account deletion, or child profile removal, contact Jose R. Estrella Sr. at josephstar48@hotmail.com.</p>
+        <p>For privacy questions, account deletion, or child profile removal, contact ALL STAR VENTURES LLC at allstar03@gmail.com.</p>
         <p>This policy is a practical starter policy for the app and should be reviewed by a qualified professional before a broad public launch involving children.</p>
       </section>
     </main>
@@ -504,7 +504,7 @@ function termsScreen() {
         <h2>Availability</h2>
         <p>KidQuest may change, pause, or stop features over time. Offline play may be limited to cached app features and previously available data.</p>
         <h2>Contact</h2>
-        <p>For support, contact Jose R. Estrella Sr. at josephstar48@hotmail.com.</p>
+        <p>For support, contact ALL STAR VENTURES LLC at allstar03@gmail.com.</p>
         <p>These terms are starter terms and should be reviewed by a qualified professional before a broad public launch involving children.</p>
       </section>
     </main>
